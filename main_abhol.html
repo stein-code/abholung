@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Abholzeiten</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+        }
+        .upload-section {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        input[type="file"] {
+            margin: 10px 0;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        th {
+            background-color: #4CAF50;
+            color: white;
+            font-weight: bold;
+        }
+        tr:hover {
+            background-color: #f5f5f5;
+        }
+        tr:last-child td {
+            border-bottom: none;
+        }
+        .error {
+            color: red;
+            padding: 10px;
+            background-color: #ffe6e6;
+            border-radius: 4px;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Abholzeiten Übersicht</h1>
+    
+    <div class="upload-section">
+        <h3>CSV-Datei laden:</h3>
+        <input type="file" id="csvFile" accept=".csv">
+        <div id="error"></div>
+    </div>
+    
+    <div id="tableContainer"></div>
+
+    <script>
+        document.getElementById('csvFile').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            const errorDiv = document.getElementById('error');
+            errorDiv.innerHTML = '';
+            
+            if (file) {
+                const reader = new FileReader();
+                
+                reader.onload = function(event) {
+                    try {
+                        const csv = event.target.result;
+                        displayTable(csv);
+                    } catch (error) {
+                        errorDiv.innerHTML = '<p class="error">Fehler beim Laden der Datei: ' + error.message + '</p>';
+                    }
+                };
+                
+                reader.onerror = function() {
+                    errorDiv.innerHTML = '<p class="error">Fehler beim Lesen der Datei.</p>';
+                };
+                
+                reader.readAsText(file);
+            }
+        });
+
+        function displayTable(csv) {
+            const lines = csv.split('\n').filter(line => line.trim() !== '');
+            
+            if (lines.length === 0) {
+                document.getElementById('tableContainer').innerHTML = '<p>Keine Daten gefunden.</p>';
+                return;
+            }
+            
+            let html = '<table>';
+            
+            lines.forEach((line, index) => {
+                const cells = line.split(',').map(cell => cell.trim());
+                
+                if (index === 0) {
+                    // Header-Zeile
+                    html += '<thead><tr>';
+                    cells.forEach(cell => {
+                        html += '<th>' + escapeHtml(cell) + '</th>';
+                    });
+                    html += '</tr></thead><tbody>';
+                } else {
+                    // Daten-Zeilen
+                    html += '<tr>';
+                    cells.forEach(cell => {
+                        html += '<td>' + escapeHtml(cell) + '</td>';
+                    });
+                    html += '</tr>';
+                }
+            });
+            
+            html += '</tbody></table>';
+            document.getElementById('tableContainer').innerHTML = html;
+        }
+        
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+    </script>
+</body>
+</html>
